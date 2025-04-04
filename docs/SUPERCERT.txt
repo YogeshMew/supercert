@@ -1,0 +1,89 @@
+SuperCert Transcript Verification System - Setup Instructions
+=========================================================
+
+Prerequisites:
+-------------
+1. Node.js (v14 or higher)
+2. npm (Node Package Manager)
+3. MetaMask wallet browser extension
+4. MongoDB installed locally or MongoDB Atlas account
+
+Step-by-Step Setup Instructions:
+------------------------------
+
+1. Clone and Install Root Dependencies
+------------------------------------
+git clone <repository-url>
+cd SuperCert--Transcript-Verification-System-for-Engineering-Colleges-using-Blockchain-main
+npm install
+
+2. Install Client Dependencies
+----------------------------
+cd client
+npm install
+
+3. Install Server Dependencies
+----------------------------
+cd ../server
+npm install
+
+4. Configure Environment Variables
+-------------------------------
+Create a .env file in the root directory with the following:
+PRIVATE_KEY=your_private_key
+ALCHEMY_API_KEY=your_alchemy_api_key
+MONGODB_URI=your_mongodb_connection_string
+
+5. Deploy Smart Contracts
+-----------------------
+From the root directory:
+npx hardhat compile
+npx hardhat run scripts/deploy.js --network sepolia
+
+Note: Copy the deployed contract address and update it in client/src/config.js
+
+6. Start the Backend Server
+-------------------------
+cd server
+npm start
+(Server will start on port 5000)
+
+7. Start the Frontend Application
+------------------------------
+In a new terminal:
+cd client
+npm run dev
+(Application will start on http://localhost:5173)
+
+Running the Application:
+----------------------
+
+1. Connect MetaMask
+------------------
+- Connect to Sepolia test network
+- Connect MetaMask wallet to the application
+- Ensure you have Sepolia test ETH (obtain from a Sepolia faucet)
+
+2. Access the Application
+-----------------------
+- Admin Interface: http://localhost:5173/admin
+- User Interface: http://localhost:5173
+
+Important Notes:
+--------------
+- Ensure MongoDB is running if using local installation
+- Smart contracts are deployed on Sepolia testnet
+- All transactions require MetaMask confirmation
+- Admin account must be pre-configured in the system
+- Ports 5000 (backend) and 5173 (frontend) must be available
+
+Troubleshooting:
+--------------
+If you encounter any issues:
+1. Check if all dependencies are properly installed
+2. Verify environment variables are correctly set
+3. Ensure MongoDB is running
+4. Check MetaMask connection and network
+5. Verify you have sufficient Sepolia ETH for transactions
+
+For additional support or questions, please refer to the project documentation or create an issue on the repository.

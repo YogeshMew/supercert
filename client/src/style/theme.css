@@ -1,0 +1,106 @@
+/* SuperCert Theme - Global Design System */
+
+:root {
+  /* Primary Colors */
+  --primary-main: #3E4095; /* Deep indigo - main brand color */
+  --primary-light: #5D60B9; /* Lighter indigo for hover states */
+  --primary-dark: #2A2B66; /* Darker indigo for active states */
+  
+  /* Secondary Colors */
+  --secondary-main: #E5B83D; /* Gold/amber - certificate color */
+  --secondary-light: #F9D678; /* Light gold for backgrounds */
+  --secondary-dark: #C99622; /* Dark gold for emphasis */
+  
+  /* Neutral Colors */
+  --neutral-100: #FFFFFF;
+  --neutral-200: #F8F9FC;
+  --neutral-300: #EEF1F6;
+  --neutral-400: #D2D8E2;
+  --neutral-500: #A3AEC2;
+  --neutral-600: #71809A;
+  --neutral-700: #4A5568;
+  --neutral-800: #2D3748;
+  --neutral-900: #1A202C;
+  
+  /* Success/Error Colors */
+  --success: #38A169;
+  --error: #E53E3E;
+  --warning: #DD6B20;
+  --info: #3182CE;
+  
+  /* Background Colors */
+  --background-light: var(--neutral-200);
+  --background-dark: var(--neutral-800);
+  --background-gradient: linear-gradient(135deg, var(--secondary-light) 0%, var(--secondary-main) 100%);
+  --card-background: var(--neutral-100);
+  
+  /* Text Colors */
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-700);
+  --text-tertiary: var(--neutral-600);
+  --text-light: var(--neutral-100);
+  
+  /* Border Colors */
+  --border-light: var(--neutral-300);
+  --border-medium: var(--neutral-400);
+  --border-dark: var(--neutral-500);
+  
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+  
+  /* Typography */
+  --font-family-main: 'Poppins', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-heading: 'Poppins', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: 'Courier New', monospace;
+  
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-md: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem;  /* 36px */
+  --font-size-5xl: 3rem;     /* 48px */
+  
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Line Heights */
+  --line-height-none: 1;
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+  
+  /* Spacing */
+  --space-xs: 0.25rem;  /* 4px */
+  --space-sm: 0.5rem;   /* 8px */
+  --space-md: 1rem;     /* 16px */
+  --space-lg: 1.5rem;   /* 24px */
+  --space-xl: 2rem;     /* 32px */
+  --space-2xl: 3rem;    /* 48px */
+  --space-3xl: 4rem;    /* 64px */
+  
+  /* Border Radius */
+  --border-radius-sm: 0.125rem; /* 2px */
+  --border-radius-md: 0.25rem;  /* 4px */
+  --border-radius-lg: 0.5rem;   /* 8px */
+  --border-radius-xl: 1rem;     /* 16px */
+  --border-radius-full: 9999px;
+  
+  /* Transition */
+  --transition-fast: 150ms;
+  --transition-normal: 300ms;
+  --transition-slow: 500ms;
+  --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
