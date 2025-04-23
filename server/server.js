@@ -44,6 +44,7 @@ const ipfsRoutes = require('./routes/ipfsRoutes');
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 const activationCodeRoutes = require('./routes/activationCodeRoutes');
 const verifyRoutes = require('./routes/verifyRoutes');
+const verificationLogRoutes = require('./routes/verificationLogRoutes');
 
 // Use routes
 app.use('/api/users', userRoutes);
@@ -53,6 +54,7 @@ app.use('/api/ipfs', ipfsRoutes);
 app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/activation-codes', activationCodeRoutes);
 app.use('/api/verify', verifyRoutes);
+app.use('/api/verification-logs', verificationLogRoutes);
 
 // Error handling middleware
 app.use(notFound);

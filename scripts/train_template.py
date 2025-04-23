@@ -13,6 +13,7 @@ import pytesseract
 import re
 import argparse
 from pathlib import Path
+from typing import Dict, Any, Tuple, List
 
 # Constants
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -50,112 +51,70 @@ def preprocess_image(image_path):
         'blur': blur
     }
 
-def extract_features(image_path):
-    """Extract features from the image."""
-    processed = preprocess_image(image_path)
-    features = {}
+def extract_features(image_path: str) -> Dict[str, Any]:
+    """
+    Extract features from the template image including SIFT keypoints,
+    dimensions, and image quality metrics.
+    """
+    # Read image
+    img = cv2.imread(image_path)
+    if img is None:
+        raise ValueError(f"Could not read image at {image_path}")
     
-    # Extract text using OCR with multiple configurations
-    try:
-        # Configuration 1: Basic
-        text1 = pytesseract.image_to_string(processed['gray'])
-        
-        # Configuration 2: With layout analysis
-        custom_config = r'--oem 3 --psm 6'
-        text2 = pytesseract.image_to_string(processed['gray'], config=custom_config)
-        
-        # Configuration 3: Optimized for structured documents
-        custom_config = r'--oem 3 --psm 4'
-        text3 = pytesseract.image_to_string(processed['gray'], config=custom_config)
-        
-        # Use the longest text result, as it likely has the most information
-        text = max([text1, text2, text3], key=len)
-        features['text'] = text
-        
-        # Extract named entities and potential fields
-        # Look for patterns that could be field labels
-        field_patterns = [
-            (r'(?:STUDENT|NAME)[:\s]+([A-Za-z\s.]+)', 'student_name_pattern'),
-            (r'(?:ROLL|SEAT)[:\s]*(?:NO|NUMBER|#)[:\s]*([A-Z0-9]+)', 'roll_number_pattern'),
-            (r'(?:BOARD|UNIVERSITY)[:\s]+([A-Za-z\s.]+)', 'board_pattern'),
-            (r'BATCH|YEAR[:\s]+(\d{4})', 'year_pattern'),
-            (r'EXAM[:\s]+([A-Za-z\s.]+\d{4})', 'exam_pattern')
-        ]
-        
-        patterns_found = {}
-        for pattern, label in field_patterns:
-            matches = re.findall(pattern, text, re.IGNORECASE)
-            if matches:
-                patterns_found[label] = matches[0].strip()
-        
-        features['field_patterns'] = patterns_found
-        
-    except Exception as e:
-        print(f"OCR extraction error: {e}", file=sys.stderr)
-        features['text'] = ""
+    # Convert to grayscale for SIFT
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
-    # Extract structural features
-    try:
-        # Edge detection
-        edges = cv2.Canny(processed['blur'], 50, 150)
-        
-        # Store edge descriptor
-        edge_count = np.sum(edges > 0)
-        features['edge_density'] = float(edge_count) / (edges.shape[0] * edges.shape[1])
-        
-        # Extract contours
-        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        features['num_contours'] = len(contours)
-        
-        # Extract logo and seal positions - look for circular patterns
-        circles = cv2.HoughCircles(
-            processed['blur'],
-            cv2.HOUGH_GRADIENT,
-            1,
-            20,
-            param1=50,
-            param2=30,
-            minRadius=10,
-            maxRadius=100
-        )
-        
-        if circles is not None:
-            circles = np.round(circles[0, :]).astype("int")
-            features['seal_positions'] = circles.tolist()
-        else:
-            features['seal_positions'] = []
-        
-        # Layout detection - detect horizontal and vertical lines
-        horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (50, 1))
-        horizontal_lines = cv2.morphologyEx(processed['thresh'], cv2.MORPH_OPEN, horizontal_kernel)
-        vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 50))
-        vertical_lines = cv2.morphologyEx(processed['thresh'], cv2.MORPH_OPEN, vertical_kernel)
-        
-        # Get line positions
-        h_lines, _ = cv2.findContours(horizontal_lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        v_lines, _ = cv2.findContours(vertical_lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        features['layout'] = {
-            'h_lines': len(h_lines),
-            'v_lines': len(v_lines),
+    # Initialize SIFT detector
+    sift = cv2.SIFT_create()
+    keypoints, descriptors = sift.detectAndCompute(gray, None)
+    
+    # Get image dimensions
+    height, width = img.shape[:2]
+    aspect_ratio = width / height
+    
+    # Calculate mean color values
+    mean_color = cv2.mean(img)[:3]
+    
+    # Calculate image quality metrics
+    blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
+    brightness = np.mean(gray)
+    contrast = np.std(gray)
+    
+    # Convert keypoints to serializable format
+    keypoints_list = [
+        {
+            'x': kp.pt[0],
+            'y': kp.pt[1],
+            'size': kp.size,
+            'angle': kp.angle,
+            'response': kp.response,
+            'octave': kp.octave,
         }
-        
-        # Extract regions of interest - look for rectangular sections
-        combined_lines = cv2.addWeighted(horizontal_lines, 0.5, vertical_lines, 0.5, 0)
-        rect_contours, _ = cv2.findContours(combined_lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        rois = []
-        for contour in rect_contours:
-            x, y, w, h = cv2.boundingRect(contour)
-            if w > 50 and h > 20:  # Filter out small noise
-                rois.append([x, y, w, h])
-        
-        features['rois'] = rois
-        
-    except Exception as e:
-        print(f"Feature extraction error: {e}", file=sys.stderr)
+        for kp in keypoints
+    ]
     
-    return features
+    return {
+        'dimensions': {
+            'width': width,
+            'height': height,
+            'aspect_ratio': aspect_ratio
+        },
+        'features': {
+            'keypoints': keypoints_list,
+            'descriptors': descriptors.tolist() if descriptors is not None else None,
+            'keypoint_count': len(keypoints)
+        },
+        'quality': {
+            'blur_score': float(blur_score),
+            'brightness': float(brightness),
+            'contrast': float(contrast),
+            'mean_color': {
+                'b': float(mean_color[0]),
+                'g': float(mean_color[1]),
+                'r': float(mean_color[2])
+            }
+        }
+    }
 
 def create_template_visualization(image_path, features, template_name):
     """Create a visualization of the template with detected features highlighted"""
@@ -253,26 +212,83 @@ def train_template(template_path, template_name):
             "error": str(e)
         }
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Train a document template by extracting features.')
-    parser.add_argument('template_path', help='Path to the template image')
-    parser.add_argument('template_name', help='Name to assign to the template')
-    parser.add_argument('--debug', action='store_true', help='Enable debug output')
+def validate_template(image_path: str) -> Tuple[bool, str, Dict[str, Any]]:
+    """
+    Validate the template image for minimum quality requirements.
+    Returns: (is_valid, message, validation_data)
+    """
+    # Read image
+    img = cv2.imread(image_path)
+    if img is None:
+        return False, "Failed to read image", {}
+    
+    height, width = img.shape[:2]
+    validation_data = {
+        'dimensions': {'width': width, 'height': height},
+        'checks': {}
+    }
+    
+    # Check minimum dimensions
+    min_dimension = 300
+    if width < min_dimension or height < min_dimension:
+        validation_data['checks']['dimensions'] = False
+        return False, f"Image dimensions too small. Minimum required: {min_dimension}x{min_dimension}", validation_data
+    validation_data['checks']['dimensions'] = True
+    
+    # Check for blur
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
+    validation_data['checks']['blur'] = blur_score > 100
+    if blur_score < 100:
+        return False, "Image is too blurry", validation_data
+    
+    # Check contrast
+    contrast = np.std(gray)
+    validation_data['checks']['contrast'] = contrast > 30
+    if contrast < 30:
+        return False, "Image has insufficient contrast", validation_data
+    
+    return True, "Template validation successful", validation_data
+
+def main():
+    parser = argparse.ArgumentParser(description='Template training and feature extraction')
+    parser.add_argument('--image-path', required=True, help='Path to the template image')
+    parser.add_argument('--template-name', required=True, help='Name of the template')
+    parser.add_argument('--extract-features', action='store_true', help='Extract features from template')
+    parser.add_argument('--validate-template', action='store_true', help='Validate template image')
     
     args = parser.parse_args()
     
+    result = {
+        'template_name': args.template_name,
+        'image_path': args.image_path
+    }
+    
     try:
-        # Train template
-        result = train_template(args.template_path, args.template_name)
+        if args.validate_template:
+            is_valid, message, validation_data = validate_template(args.image_path)
+            result.update({
+                'validation': {
+                    'is_valid': is_valid,
+                    'message': message,
+                    'data': validation_data
+                }
+            })
         
-        # Print result as JSON
+        if args.extract_features:
+            features = extract_features(args.image_path)
+            result['features'] = features
+        
         print(json.dumps(result))
+        
     except Exception as e:
-        print(json.dumps({
-            "success": False,
-            "message": f"Error training template: {str(e)}"
-        }))
-        if args.debug:
-            import traceback
-            traceback.print_exc()
-        sys.exit(1) 
+        error_result = {
+            'error': str(e),
+            'template_name': args.template_name,
+            'image_path': args.image_path
+        }
+        print(json.dumps(error_result))
+        exit(1)
+
+if __name__ == '__main__':
+    main() 

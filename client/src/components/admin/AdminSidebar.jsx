@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   FaHome, 
   FaUsersCog, 
@@ -7,21 +7,32 @@ import {
   FaEnvelope, 
   FaChartBar, 
   FaSignOutAlt,
-  FaFileAlt
+  FaFileAlt,
+  FaTachometerAlt,
+  FaFileUpload,
+  FaBrain,
+  FaUsers
 } from 'react-icons/fa';
 import './AdminSidebar.css';
 
-const AdminSidebar = ({ isOpen, setIsOpen, activeTab, setActiveTab }) => {
+const AdminSidebar = ({ isOpen, setIsOpen, activeTab, setActiveTab, setIsAuthenticated }) => {
+  const [location, setLocation] = useState(useLocation());
   const navigate = useNavigate();
 
   const menuItems = [
-    { id: 'dashboard', text: 'Dashboard', icon: <FaHome />, path: '/admin' },
-    { id: 'add', text: 'Add Document', icon: <FaPlus />, path: '/admin/add' },
-    { id: 'template-trainer', text: 'Template Trainer', icon: <FaFileAlt />, path: '/admin/template-trainer' },
-    { id: 'users', text: 'User Management', icon: <FaUsersCog />, path: '/admin/users' },
+    { id: 'dashboard', text: 'Dashboard', icon: <FaTachometerAlt />, path: '/admin/dashboard' },
+    { id: 'add', text: 'Add Document', icon: <FaFileUpload />, path: '/admin/add-document' },
+    { id: 'template-trainer', text: 'Template Trainer', icon: <FaBrain />, path: '/admin/template-trainer' },
+    { id: 'users', text: 'User Management', icon: <FaUsers />, path: '/admin/user-management' },
     { id: 'emails', text: 'Email Templates', icon: <FaEnvelope />, path: '/admin/email-templates' },
     { id: 'analytics', text: 'Analytics', icon: <FaChartBar />, path: '/admin/analytics' }
   ];
+
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const matchingTab = menuItems.find(item => currentPath.includes(item.path));
+    setActiveTab(matchingTab ? matchingTab.id : '');
+  }, [location.pathname]);
 
   const handleMenuClick = (id, path) => {
     setActiveTab(id);
@@ -29,6 +40,13 @@ const AdminSidebar = ({ isOpen, setIsOpen, activeTab, setActiveTab }) => {
     if (window.innerWidth < 768) {
       setIsOpen(false);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('adminAuthToken');
+    setIsAuthenticated(false);
+    navigate('/admin/login');
   };
 
   return (
@@ -54,7 +72,7 @@ const AdminSidebar = ({ isOpen, setIsOpen, activeTab, setActiveTab }) => {
       <div className="sidebar-footer">
         <div 
           className="sidebar-item logout"
-          onClick={() => navigate('/logout')}
+          onClick={handleLogout}
         >
           <span className="item-icon"><FaSignOutAlt /></span>
           <span className="item-text">Logout</span>

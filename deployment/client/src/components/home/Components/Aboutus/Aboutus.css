@@ -1,0 +1,196 @@
+/* About Us Styles */
+@import '../../../../style/theme.css';
+
+.about {
+  position: relative;
+  overflow: hidden;
+}
+
+.about-container {
+  padding: var(--space-xl) 0;
+}
+
+.about-content {
+  display: flex;
+  gap: var(--space-xl);
+}
+
+.about-blocks {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.about-block {
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-md);
+  transition: transform var(--transition-normal) var(--transition-ease), box-shadow var(--transition-normal) var(--transition-ease);
+}
+
+.about-block:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.about-block-image {
+  margin-bottom: var(--space-sm);
+  background-color: var(--neutral-100);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-block-image img {
+  max-width: 80%;
+  max-height: 120px;
+  object-fit: contain;
+}
+
+.about-block h3 {
+  font-size: var(--font-size-lg);
+  color: var(--primary-dark);
+  margin-bottom: var(--space-xs);
+}
+
+.about-block p {
+  font-size: var(--font-size-md);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.about-info {
+  flex: 1.5;
+  padding: var(--space-lg);
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.about-info h2 {
+  font-size: var(--font-size-3xl);
+  color: var(--primary-dark);
+  margin-bottom: var(--space-md);
+  position: relative;
+  padding-bottom: var(--space-sm);
+  letter-spacing: 0.5px;
+}
+
+.about-info h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 4px;
+  background-color: var(--primary-main);
+  border-radius: var(--border-radius-full);
+}
+
+.about-info > p {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: var(--space-lg);
+  letter-spacing: 0.3px;
+}
+
+.about-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-md);
+  margin: var(--space-lg) 0;
+}
+
+.feature-item {
+  background-color: var(--neutral-50);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-md);
+  border-left: 4px solid var(--primary-main);
+  transition: transform var(--transition-normal) var(--transition-ease);
+}
+
+.feature-item h4 {
+  font-size: var(--font-size-lg);
+  color: var(--primary-dark);
+  margin-bottom: var(--space-xs);
+  letter-spacing: 0.3px;
+}
+
+.feature-item p {
+  font-size: var(--font-size-md);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  letter-spacing: 0.2px;
+}
+
+.about-cta {
+  font-size: var(--font-size-lg) !important;
+  font-weight: var(--font-weight-medium);
+  color: var(--primary-dark) !important;
+  line-height: 1.6;
+  padding: var(--space-md);
+  background-color: var(--neutral-100);
+  border-radius: var(--border-radius-md);
+  border-left: 4px solid var(--secondary-main);
+  letter-spacing: 0.3px;
+}
+
+/* Media Queries */
+@media (max-width: 992px) {
+  .about-content {
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+  
+  .about-blocks {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .about-info {
+    padding: var(--space-md);
+  }
+  
+  .about-info h2 {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+@media (max-width: 768px) {
+  .about-blocks {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .about-features {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 576px) {
+  .about-container {
+    padding: var(--space-lg) 0;
+  }
+  
+  .about-block-image {
+    height: 120px;
+  }
+  
+  .about-info h2 {
+    font-size: var(--font-size-xl);
+  }
+  
+  .about-info > p {
+    font-size: var(--font-size-sm);
+  }
+  
+  .about-cta {
+    font-size: var(--font-size-sm);
+    padding: var(--space-sm);
+  }
+}

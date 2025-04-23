@@ -95,6 +95,7 @@ const startPythonService = () => {
   
   if (fs.existsSync(pythonServicePath)) {
     console.log('Starting Python document verification service...');
+    console.log('Python service path:', pythonServicePath);
     
     // Check if python is available
     const pythonProcess = spawn('python', ['--version']);
@@ -122,7 +123,12 @@ const startPythonService = () => {
     pythonProcess.on('exit', (code) => {
       if (code === 0) {
         // Python is available, use it
-        const pyProcess = spawn('python', [pythonServicePath]);
+        console.log('Starting Python service with command: python', pythonServicePath);
+        
+        // Change directory to pythonService directory first
+        const pyProcess = spawn('python', [pythonServicePath], {
+          cwd: path.join(__dirname, '..', 'pythonService')
+        });
         
         pyProcess.stdout.on('data', (data) => {
           console.log(`Python service: ${data}`);

@@ -1,0 +1,51 @@
+{
+  "id": "maharashtra_board_ssc_1743615878017",
+  "filename": "maharashtra_board_ssc_1743615878017.jpg",
+  "imagePath": "D:\\supercert\\server\\data\\referenceTemplates\\maharashtra_board_ssc_1743615878017.jpg",
+  "board": "MAHARASHTRA BOARD",
+  "program": "SSC",
+  "timestamp": 1743615878017,
+  "metadata": {
+    "description": "Template for SSC Marksheet",
+    "notes": ""
+  },
+  "extractedData": {
+    "isValid": false,
+    "matchedPatterns": [
+      "studentName",
+      "examYear",
+      "rollNumber"
+    ],
+    "missingPatterns": [
+      "board",
+      "program"
+    ],
+    "studentName": "Meta ,",
+    "seatNumber": null,
+    "rollNumber": "100083",
+    "university": "DELHI UNIVERSITY",
+    "board": null,
+    "program": null,
+    "examYear": 2023,
+    "subjects": {
+      "sTLaNo)": {
+        "maxMarks": 100,
+        "marks": 100,
+        "percentage": 100
+      },
+      "SCIENCETECHNOLOGY": {
+        "maxMarks": 100,
+        "marks": 85,
+        "percentage": 85
+      },
+      "i SOCIALSCIENCES": {
+        "maxMarks": 100,
+        "marks": 80,
+        "percentage": 80
+      }
+    },
+    "marks": null,
+    "cgpa": "DISTINCTIONWITHSUBJECTSSHOWNBELOW",
+    "rawText": "- -eape --p.\r\nreretwaroraaafteat-rerory\r\nSECONDARYSCHOOLCERTIFICATEEXAMINATION-CE ey\r\n\r\n)srtaenforseroara4GThisistocertitythat y\r\ns gm8-ArI)MothersNameShila\r\n\r\n(Rrenfeenyreraceroraaoftan\r\n\r\nhaspassedtheSECONDARYSCHOOLCERTIFICATEEXAMINATION MARCH-2023\r\n\r\ninGradeDISTINCTIONwithsubjectsshownbelow.\r\n\r\n: EE 2\r\n(exoush(1sTLaNo) 100(070\r\n\r\njfmananecooasey (100083\r\n\r\nMATHEMATICS: 100 076HEALTH4PHYSICALEDUCATION\r\n\r\n0SCIENCETECHNOLOGY 100 085DEFENCESTUDIES\r\n\r\ni SOCIALSCIENCES 100 080 WATERSECURITY\r\n\r\ni\r\n\r\nQjepevroutmeneteeeencentaccerrse\r\n\r\nOF)setseeesoomaretWeret l THREEHUNDREDANDEIGHTYNINE\r\n\r\n4 eDPase.otome TNOTMENTIONED\r\n\r\nee 81234194892 5633938416750\r\n\r\nMeta ,\r\nwumeat Roo es\r\nSPSPETETETSDnaoVEE\r\n"
+  }
+}

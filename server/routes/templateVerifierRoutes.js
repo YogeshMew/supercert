@@ -57,7 +57,7 @@ const verifyDocumentHandler = async (req, res) => {
     
     // Create form data to send to Python service
     const formData = new FormData();
-    formData.append('image', fs.createReadStream(req.file.path));
+    formData.append('document', fs.createReadStream(req.file.path));
     
     // Add template_name if provided
     if (req.body.template_name) {
@@ -66,6 +66,7 @@ const verifyDocumentHandler = async (req, res) => {
     
     try {
       // Forward request to Python service
+      console.log('Sending verification request to Python service at http://localhost:5000/verify');
       const response = await axios.post('http://localhost:5000/verify', formData, {
         headers: {
           ...formData.getHeaders()
@@ -74,14 +75,20 @@ const verifyDocumentHandler = async (req, res) => {
         maxBodyLength: Infinity
       });
       
-      // Forward response from Python service
-      return res.status(200).json({
+      console.log('Python service response:', response.data);
+      
+      // Map Python service response to client expectations
+      const result = {
         success: true,
-        verified: response.data.verified,
-        template: response.data.template_name,
-        scores: response.data.scores,
-        visualizationUrl: response.data.visualization_url
-      });
+        isVerified: response.data.isVerified === true,
+        template: response.data.matched_template || 'unknown',
+        scores: response.data.similarity_scores || {},
+        message: response.data.message || 'Verification complete',
+        visualizationUrl: response.data.visualizationUrl || null
+      };
+      
+      console.log('Returning to client:', result);
+      return res.status(200).json(result);
     } catch (error) {
       console.error('Python service error:', error.message);
       
@@ -91,24 +98,34 @@ const verifyDocumentHandler = async (req, res) => {
         
         return res.status(200).json({
           success: true,
-          verified: Math.random() > 0.3, // 70% chance of success
-          template: 'maharashtra_ssc_certificate.jpg',
+          isVerified: Math.random() > 0.3, // 70% chance of success
+          template: 'maharashtra_ssc_certificate',
           scores: {
-            text_similarity: Math.random() * 0.3 + 0.6,
-            layout_similarity: Math.random() * 0.3 + 0.6, 
-            seal_similarity: Math.random() * 0.3 + 0.6,
-            table_similarity: Math.random() * 0.3 + 0.6,
-            signature_similarity: Math.random() * 0.3 + 0.6,
-            overall: Math.random() * 0.3 + 0.6
+            text_similarity: Math.random() * 30 + 60,
+            layout_similarity: Math.random() * 30 + 60, 
+            seal_similarity: Math.random() * 30 + 60,
+            table_similarity: Math.random() * 30 + 60,
+            signature_similarity: Math.random() * 30 + 60,
+            overall: Math.random() * 30 + 60
           },
-          visualizationUrl: null
+          visualizationUrl: null,
+          message: "Verification complete (mock response)"
+        });
+      }
+      
+      // Check if we got a structured error from Python service
+      if (error.response && error.response.data) {
+        console.log('Python service returned error:', error.response.data);
+        return res.status(400).json({
+          success: false,
+          message: error.response.data.error || error.response.data.details || error.response.data.message || 'Verification failed'
         });
       }
       
       // Forward error from Python service or throw a new one
       return res.status(500).json({ 
         success: false, 
-        message: error.response?.data?.error || error.message || 'Failed to verify document' 
+        message: error.message || 'Failed to verify document' 
       });
     }
   } catch (error) {

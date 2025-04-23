@@ -57,11 +57,63 @@ const Analytics = () => {
         // Calculate board distribution
         const boardCounts = {};
         studentData.forEach(student => {
-          const board = student.dept?.includes('MAHARASHTRA') ? 'Maharashtra' : 
-                        student.dept?.includes('CBSE') ? 'CBSE' : 
-                        student.dept?.includes('ICSE') ? 'ICSE' : 'Other';
+          // Normalize the board type using the same logic as AddDocument.jsx
+          const boardUpper = (student.board || '').toUpperCase();
+          const programUpper = (student.program || student.dept || '').toUpperCase();
           
-          boardCounts[board] = (boardCounts[board] || 0) + 1;
+          // SSC indicators
+          const sscIndicators = [
+            'SSC',
+            'SECONDARY SCHOOL CERTIFICATE',
+            'SECONDARY SCHOOL',
+            'MATRICULATION',
+            'MATRIC',
+            '10TH',
+            'TENTH',
+            'CLASS 10',
+            'CLASS X',
+            'GRADE 10',
+            'GRADE X'
+          ];
+          
+          // HSC indicators
+          const hscIndicators = [
+            'HSC',
+            'HIGHER SECONDARY CERTIFICATE',
+            'HIGHER SECONDARY',
+            'INTERMEDIATE',
+            '12TH',
+            'TWELFTH',
+            'CLASS 12',
+            'CLASS XII',
+            'GRADE 12',
+            'GRADE XII',
+            'PUC',
+            'PRE-UNIVERSITY'
+          ];
+
+          // First check if boardType is already normalized
+          if (student.boardType && ['SSC', 'HSC', 'Other'].includes(student.boardType)) {
+            boardCounts[student.boardType] = (boardCounts[student.boardType] || 0) + 1;
+          }
+          // Otherwise normalize it ourselves
+          else if (
+            sscIndicators.some(indicator => 
+              boardUpper.includes(indicator) || programUpper.includes(indicator)
+            )
+          ) {
+            boardCounts['SSC'] = (boardCounts['SSC'] || 0) + 1;
+          }
+          else if (
+            hscIndicators.some(indicator => 
+              boardUpper.includes(indicator) || programUpper.includes(indicator)
+            )
+          ) {
+            boardCounts['HSC'] = (boardCounts['HSC'] || 0) + 1;
+          }
+          else {
+            boardCounts['Other'] = (boardCounts['Other'] || 0) + 1;
+          }
         });
 
         const boardDistribution = Object.entries(boardCounts).map(([name, count]) => ({

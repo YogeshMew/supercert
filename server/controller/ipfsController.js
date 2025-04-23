@@ -117,23 +117,39 @@ const createFileMain = asyncHandler(async (req, res) => {
 })
 
 const sendemail = asyncHandler(async (req, res) => {
-  const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // use SSL
-    auth: {
-      user: 'yrmewara@student.sfit.ac.in',
-      pass: 'nwit dojq kmjc iyyq' // NOTE: For Gmail, you should use an App Password, not your actual password
-    }
-  });
-  
-  const userEmail = req.body.email;
-  const verificationToken = req.body.hash;    
-  const studentName = req.body.name || 'Student';
-  const institutionName = req.body.institution || 'ST FRANCIS INSTITUTE OF TECHNOLOGY';
-  
   try {
+    // Use environment variables or fallback to config values
+    const EMAIL_USER = process.env.EMAIL_USER || 'yrmewara@student.sfit.ac.in';
+    const EMAIL_PASS = process.env.EMAIL_PASS || 'app-password-here'; 
+    
+    // Log what we're using (without showing the actual password)
+    console.log(`Attempting to send email using: ${EMAIL_USER}`);
+    
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // use SSL
+      auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASS
+      }
+    });
+  
+    const userEmail = req.body.email;
+    const verificationToken = req.body.hash;    
+    const studentName = req.body.name || 'Student';
+    const institutionName = req.body.institution || 'Supercert';
+    
+    // Validate required fields
+    if (!userEmail || !verificationToken) {
+      console.error('Missing required email data:', { userEmail, verificationToken });
+      return res.status(400).json({
+        success: false,
+        message: 'Email and hash are required'
+      });
+    }
+    
     console.log('Sending email with data:', {
       email: userEmail,
       hash: verificationToken,
@@ -190,10 +206,10 @@ const sendemail = asyncHandler(async (req, res) => {
       console.log('No email template found, using default fallback');
     }
     
-    let subject = 'Your Certificate Has Been Issued';
+    let subject = 'Your Certificate Has Been Added to Blockchain';
     let emailText = `Hello ${studentName},
 
-This is to inform you that your transcripts have been successfully uploaded to blockchain. You are requested to save the below hash(CID) for further verification purpose.
+This is to inform you that your document has been successfully uploaded to blockchain. You are requested to save the below hash(CID) for verification purposes.
 
 ${verificationToken}
 
@@ -203,9 +219,9 @@ ${institutionName}`;
     
     let htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
-        <h2 style="color: #4285f4; margin-bottom: 20px;">Certificate Issuance Notification</h2>
+        <h2 style="color: #4285f4; margin-bottom: 20px;">Document Added to Blockchain</h2>
         <p>Hello ${studentName},</p>
-        <p>This is to inform you that your transcripts have been successfully uploaded to blockchain. You are requested to save the below hash(CID) for further verification purpose.</p>
+        <p>This is to inform you that your document has been successfully uploaded to blockchain. You are requested to save the below hash(CID) for verification purposes.</p>
         <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0; word-break: break-all;">
           <code>${verificationToken}</code>
         </div>
@@ -245,25 +261,51 @@ ${institutionName}`;
       `;
     }
 
-    // Send email with both text and HTML versions
-  transporter.sendMail({
-      from: `"${institutionName}" <yrmewara@student.sfit.ac.in>`,
-    to: userEmail,
-      subject: subject,
-      text: emailText, // Plain text fallback
-      html: htmlContent // HTML version with styling
-  }, (error, info) => {
-    if (error) {
-      console.error('Error sending email:', error);
-      res.status(500).send('Failed to send verification email');
-    } else {
-      console.log('Verification email sent:', info.response);
-      res.status(200).send('Verification email sent successfully');
+    // If we don't have credentials, simulate success but log a warning
+    if (!EMAIL_PASS || EMAIL_PASS === 'app-password-here') {
+      console.warn('Email credentials not configured. Simulating email success.');
+      return res.status(200).json({
+        success: true,
+        message: 'Email notification simulated (no credentials configured)',
+        emailData: {
+          to: userEmail,
+          subject: subject
+        }
+      });
     }
-  });
+
+    // Attempt to send the email
+    try {
+      // Send email with both text and HTML versions
+      const info = await transporter.sendMail({
+        from: `"${institutionName}" <${EMAIL_USER}>`,
+        to: userEmail,
+        subject: subject,
+        text: emailText, // Plain text fallback
+        html: htmlContent // HTML version with styling
+      });
+      
+      console.log('Verification email sent:', info.response);
+      res.status(200).json({
+        success: true,
+        message: 'Verification email sent successfully'
+      });
+    } catch (emailError) {
+      console.error('Error sending email:', emailError);
+      // Return 200 status with error info, so client doesn't retry
+      res.status(200).json({
+        success: false,
+        message: 'Failed to send email, but document was stored successfully',
+        error: emailError.message
+      });
+    }
   } catch (error) {
-    console.error('Error preparing email:', error);
-    res.status(500).send('Failed to prepare verification email');
+    console.error('Server error in sendemail:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error processing email request',
+      error: error.message
+    });
   }
 });
 

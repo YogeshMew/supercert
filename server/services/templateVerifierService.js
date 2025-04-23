@@ -3,6 +3,7 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 const logger = require('../utils/logger');
+const { spawn } = require('child_process');
 
 // Python service endpoint
 const PYTHON_SERVICE_URL = 'http://localhost:5000';
@@ -12,6 +13,20 @@ const PYTHON_SERVICE_URL = 'http://localhost:5000';
  * using the Python-based verification service
  */
 class TemplateVerifierService {
+  constructor() {
+    this.templatesDir = path.join(__dirname, '../uploads/templates');
+    this.tempDir = path.join(__dirname, '../uploads/temp');
+    this.verificationThreshold = 0.65; // 65% similarity required for verification
+    
+    // Ensure directories exist
+    if (!fs.existsSync(this.templatesDir)) {
+      fs.mkdirSync(this.templatesDir, { recursive: true });
+    }
+    if (!fs.existsSync(this.tempDir)) {
+      fs.mkdirSync(this.tempDir, { recursive: true });
+    }
+  }
+
   /**
    * Check if the Python verification service is running
    * @returns {Promise<boolean>} True if service is running
@@ -50,23 +65,86 @@ class TemplateVerifierService {
    */
   async trainTemplate(imagePath, templateName) {
     try {
-      const formData = new FormData();
-      formData.append('image', fs.createReadStream(imagePath));
+      console.log(`Training template ${templateName} with image at ${imagePath}`);
       
-      if (templateName) {
-        formData.append('template_name', templateName);
+      // Validate template name
+      if (!templateName || typeof templateName !== 'string' || !templateName.trim()) {
+        throw new Error('Invalid template name');
       }
-
-      const response = await axios.post(`${PYTHON_SERVICE_URL}/train`, formData, {
-        headers: {
-          ...formData.getHeaders()
-        }
+      
+      // Get template image file extension
+      const ext = path.extname(imagePath);
+      
+      // Copy template to templates directory with proper name
+      const templateDestination = path.join(this.templatesDir, `${templateName}${ext}`);
+      fs.copyFileSync(imagePath, templateDestination);
+      
+      // Extract features using Python script
+      const pythonScript = path.join(__dirname, '../../scripts/train_template.py');
+      
+      return new Promise((resolve, reject) => {
+        const pythonProcess = spawn('python', [
+          pythonScript,
+          templateDestination,
+          templateName,
+          '--extract-features',
+          '--validate-template'
+        ]);
+        
+        let resultData = '';
+        let errorData = '';
+        
+        pythonProcess.stdout.on('data', (data) => {
+          resultData += data.toString();
+        });
+        
+        pythonProcess.stderr.on('data', (data) => {
+          errorData += data.toString();
+          console.error(`Python training error: ${data}`);
+        });
+        
+        pythonProcess.on('close', (code) => {
+          if (code !== 0) {
+            console.error(`Python process exited with code ${code}`);
+            return reject(new Error(`Template training failed: ${errorData}`));
+          }
+          
+          try {
+            const result = JSON.parse(resultData);
+            
+            // Validate training result
+            if (!result.features || Object.keys(result.features).length === 0) {
+              return reject(new Error('No features extracted from template'));
+            }
+            
+            // Store template metadata
+            const metadata = {
+              name: templateName,
+              path: templateDestination,
+              features: result.features,
+              createdAt: new Date().toISOString(),
+              lastUpdated: new Date().toISOString()
+            };
+            
+            // Save metadata to JSON file
+            const metadataPath = path.join(this.templatesDir, `${templateName}.json`);
+            fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+            
+            resolve({
+              success: true,
+              templateName,
+              features: result.features,
+              metadata
+            });
+          } catch (error) {
+            reject(new Error(`Failed to parse Python training result: ${error.message}`));
+          }
+        });
       });
-
-      return response.data;
+      
     } catch (error) {
-      logger.error('Failed to train template:', error.message);
-      throw new Error('Failed to train template: ' + (error.response?.data?.error || error.message));
+      console.error('Error training template:', error);
+      throw new Error(`Template training failed: ${error.message}`);
     }
   }
 

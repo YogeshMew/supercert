@@ -384,3 +384,58 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - OpenZeppelin for smart contract libraries
 - Ethereum community for blockchain tools
 - Tesseract OCR for document text extraction
+
+# Image Feature Extraction and Template Validation
+
+This script provides functionality for extracting features from images and validating image templates based on quality metrics.
+
+## Prerequisites
+
+- Python 3.7 or higher
+- Tesseract OCR engine installed on your system
+  - Windows: Download and install from [GitHub Tesseract Release](https://github.com/UB-Mannheim/tesseract/wiki)
+  - Linux: `sudo apt-get install tesseract-ocr`
+  - macOS: `brew install tesseract`
+
+## Installation
+
+1. Clone this repository
+2. Install the required Python packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Usage
+
+The script can be used in two modes:
+
+### Feature Extraction
+
+To extract features from an image:
+
+```bash
+python main.py --image_path path/to/image.jpg --template_name template1 --extract_features
+```
+
+### Template Validation
+
+To validate if an image meets the template requirements:
+
+```bash
+python main.py --image_path path/to/image.jpg --template_name template1 --validate
+```
+
+## Validation Criteria
+
+The script checks for the following criteria:
+- Minimum dimensions: 300x300 pixels
+- Minimum blur score: 100 (higher is better)
+- Minimum contrast: 30
+
+## Output
+
+The script outputs JSON-formatted data containing:
+- Image dimensions
+- SIFT keypoints
+- Quality metrics (blur score, contrast)
+- Validation results (if validation mode is used)

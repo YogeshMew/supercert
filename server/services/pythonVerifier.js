@@ -6,7 +6,7 @@ const path = require('path');
 class PythonVerifierService {
   constructor() {
     this.baseUrl = 'http://localhost:5000';
-    console.log('PythonVerifierService initialized');
+    console.log('PythonVerifierService initialized with base URL:', this.baseUrl);
   }
 
   /**

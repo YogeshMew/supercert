@@ -28,7 +28,11 @@ const studentInfoSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-
+    boardType: {
+        type: String,
+        enum: ['SSC', 'HSC', 'Other'],
+        default: 'Other'
+    }
 }, {
     timestamps: true,
 });

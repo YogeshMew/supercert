@@ -6,6 +6,17 @@ const os = require('os');
 const PDFDocument = require('pdfkit');
 const fs = require('fs'); // Keep fs import for potential other uses, but we avoid fs.createWriteStream
 
+// Helper function to safely apply font (falls back to Helvetica if custom font not available)
+const safeFont = (doc, fontName) => {
+  try {
+    // Always default to Helvetica to avoid ENOENT errors
+    return doc.font('Helvetica');
+  } catch (error) {
+    console.error(`Error applying font ${fontName}:`, error.message);
+    return doc.font('Helvetica'); // Fallback to default
+  }
+};
+
 // Set up storage for uploaded images
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
@@ -399,7 +410,9 @@ const generatePdfFromData = async (req, res) => {
                 Title: 'Student Transcript',
                 Author: 'SuperCert System',
                 Subject: 'Educational Certificate',
-            }
+            },
+            // Use standard fonts by default to avoid font loading issues
+            font: 'Helvetica'
         });
         
         // Pipe the PDF directly to the response
@@ -413,9 +426,9 @@ const generatePdfFromData = async (req, res) => {
         
         // Add header with logo and title based on document type
         if (isMaharashtraSSC) {
-            doc.fontSize(20).font('Helvetica-Bold').text('MAHARASHTRA SSC CERTIFICATE', { align: 'center' });
+            doc.fontSize(20).font('Helvetica').text('MAHARASHTRA SSC CERTIFICATE', { align: 'center' });
         } else {
-            doc.fontSize(20).font('Helvetica-Bold').text('STUDENT TRANSCRIPT', { align: 'center' });
+            doc.fontSize(20).font('Helvetica').text('STUDENT TRANSCRIPT', { align: 'center' });
         }
         doc.moveDown();
         
@@ -426,7 +439,7 @@ const generatePdfFromData = async (req, res) => {
         doc.moveDown();
         
         // Student details section
-        doc.fontSize(14).font('Helvetica-Bold').text('STUDENT DETAILS', { underline: true });
+        doc.fontSize(14).font('Helvetica').text('STUDENT DETAILS', { underline: true });
         doc.moveDown(0.5);
         
         // Create a table-like structure for student details
@@ -454,7 +467,7 @@ const generatePdfFromData = async (req, res) => {
         
         details.forEach(detail => {
             doc.fontSize(11)
-               .font('Helvetica-Bold')
+               .font('Helvetica')
                .text(`${detail.label}: `, { continued: true })
                .font('Helvetica')
                .text(detail.value);
@@ -471,7 +484,7 @@ const generatePdfFromData = async (req, res) => {
                .stroke();
             doc.moveDown();
             
-            doc.fontSize(14).font('Helvetica-Bold').text('ACADEMIC PERFORMANCE', { underline: true });
+            doc.fontSize(14).font('Helvetica').text('ACADEMIC PERFORMANCE', { underline: true });
             doc.moveDown(0.5);
             
             // If we have subject-wise marks
@@ -480,7 +493,7 @@ const generatePdfFromData = async (req, res) => {
                 const tableTop = doc.y;
                 const tableWidth = doc.page.width - 100;
                 
-                doc.fontSize(10).font('Helvetica-Bold');
+                doc.fontSize(10).font('Helvetica');
                 doc.text('Subject', 50, tableTop, { width: tableWidth * 0.5, align: 'left' });
                 doc.text('Marks', 50 + tableWidth * 0.5, tableTop, { width: tableWidth * 0.25, align: 'center' });
                 doc.text('Out Of', 50 + tableWidth * 0.75, tableTop, { width: tableWidth * 0.25, align: 'center' });
@@ -525,7 +538,7 @@ const generatePdfFromData = async (req, res) => {
             
             // Add total marks if available
             if (extractedData.totalMarks || extractedData.sscMarks) {
-                doc.fontSize(12).font('Helvetica-Bold')
+                doc.fontSize(12).font('Helvetica')
                    .text('Total Marks: ', { continued: true })
                    .font('Helvetica')
                    .text(`${extractedData.totalMarks || extractedData.sscMarks || 'N/A'}`);
@@ -533,7 +546,7 @@ const generatePdfFromData = async (req, res) => {
             
             // Add percentage if available
             if (extractedData.percentage || extractedData.sscPercentage) {
-                doc.fontSize(12).font('Helvetica-Bold')
+                doc.fontSize(12).font('Helvetica')
                    .text('Percentage: ', { continued: true })
                    .font('Helvetica')
                    .text(`${extractedData.percentage || extractedData.sscPercentage || 'N/A'}`);
@@ -541,7 +554,7 @@ const generatePdfFromData = async (req, res) => {
             
             // Add division or grade if available
             if (extractedData.division || extractedData.grade) {
-                doc.fontSize(12).font('Helvetica-Bold')
+                doc.fontSize(12).font('Helvetica')
                    .text('Division/Grade: ', { continued: true })
                    .font('Helvetica')
                    .text(`${extractedData.division || extractedData.grade || 'N/A'}`);
@@ -550,7 +563,7 @@ const generatePdfFromData = async (req, res) => {
 
         // Add a new page for the original image
         doc.addPage();
-        doc.fontSize(16).font('Helvetica-Bold').text('ORIGINAL DOCUMENT IMAGE', { align: 'center' });
+        doc.fontSize(16).font('Helvetica').text('ORIGINAL DOCUMENT IMAGE', { align: 'center' });
         doc.moveDown();
         
         // Check if we have the image source in the data
@@ -574,7 +587,7 @@ const generatePdfFromData = async (req, res) => {
                     });
                     
                     doc.moveDown();
-                    doc.fontSize(10).font('Helvetica-Italic').text('Original uploaded document image', { align: 'center' });
+                    doc.fontSize(10).font('Helvetica').text('Original uploaded document image', { align: 'center' });
                 } else {
                     // If it's a URL or file path
                     const imageUrl = extractedData.imageSource;
@@ -585,7 +598,7 @@ const generatePdfFromData = async (req, res) => {
                     });
                     
                     doc.moveDown();
-                    doc.fontSize(10).font('Helvetica-Italic').text('Original uploaded document image', { align: 'center' });
+                    doc.fontSize(10).font('Helvetica').text('Original uploaded document image', { align: 'center' });
                 }
             } catch (imgError) {
                 console.error('Error adding image to PDF:', imgError);
@@ -597,7 +610,7 @@ const generatePdfFromData = async (req, res) => {
         
         // Add verification information
         doc.addPage();
-        doc.fontSize(12).font('Helvetica-Bold').text('VERIFICATION INFORMATION', { underline: true });
+        doc.fontSize(12).font('Helvetica').text('VERIFICATION INFORMATION', { underline: true });
         doc.moveDown(0.5);
         
         doc.fontSize(10).font('Helvetica')
@@ -611,7 +624,7 @@ const generatePdfFromData = async (req, res) => {
         
         // Add footer
         doc.moveDown(4);
-        doc.fontSize(9).font('Helvetica-Oblique').text('This document is computer-generated and does not require a signature.', { align: 'center' });
+        doc.fontSize(9).font('Helvetica').text('This document is computer-generated and does not require a signature.', { align: 'center' });
         doc.moveDown(0.5);
         doc.text('Powered by SuperCert Blockchain Certification System', { align: 'center' });
         doc.moveDown(0.5);
