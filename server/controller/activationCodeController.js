@@ -6,13 +6,7 @@ const crypto = require('crypto');
 // @route GET /api/activation-codes
 // @access Private (Admin only)
 const getActivationCodes = asyncHandler(async (req, res) => {
-    // Filter activation codes by the institution of the current user
-    // This ensures admins only see codes for their own institution
-    const activationCodes = await ActivationCode.find({ 
-        createdBy: req.user.id,
-        institutionSpecific: { $ne: true } // Exclude institution-specific codes
-    }).sort({ createdAt: -1 });
-    
+    const activationCodes = await ActivationCode.find().sort({ createdAt: -1 });
     res.status(200).json(activationCodes);
 });
 
@@ -26,9 +20,7 @@ const generateActivationCode = asyncHandler(async (req, res) => {
     // Create the activation code in the database
     const activationCode = await ActivationCode.create({
         code,
-        createdBy: req.user.id,
-        institution: req.user.institution, // Associate with user's institution
-        role: 'admin' // The role that will be assigned when this code is used
+        createdBy: req.user.id
     });
     
     if (activationCode) {
@@ -96,7 +88,7 @@ const deleteActivationCode = asyncHandler(async (req, res) => {
 // @route POST /api/activation-codes/verify
 // @access Public
 const verifyActivationCode = asyncHandler(async (req, res) => {
-    const { code, role } = req.body;
+    const { code } = req.body;
     
     if (!code) {
         res.status(400);
@@ -115,25 +107,7 @@ const verifyActivationCode = asyncHandler(async (req, res) => {
         throw new Error("Activation code has already been used");
     }
     
-    // If role is specified, check if code type matches
-    if (role && activationCode.type !== 'general' && activationCode.type !== role) {
-        res.status(403);
-        throw new Error(`This activation code is not valid for ${role} registration`);
-    }
-    
-    // Return more information about the code
-    const response = {
-        valid: true,
-        codeId: activationCode._id,
-        type: activationCode.type
-    };
-    
-    // If it's institution-specific, include the institution information
-    if (activationCode.institutionSpecific && activationCode.institution) {
-        response.institution = activationCode.institution;
-    }
-    
-    res.status(200).json(response);
+    res.status(200).json({ valid: true });
 });
 
 // @desc Mark an activation code as used
